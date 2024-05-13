@@ -1,5 +1,6 @@
 package com.frogkim93.stationsystemapi.model;
 
+import com.frogkim93.stationsystemapi.mission.constants.MissionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,7 +26,7 @@ public class Mission {
     private String name;
 
     @Column
-    private int type;
+    private MissionType type;
 
     @Column
     private String mainPoint;

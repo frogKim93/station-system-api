@@ -4,8 +4,10 @@ import com.frogkim93.stationsystemapi.mission.dto.CreateMissionDto;
 import com.frogkim93.stationsystemapi.mission.dto.DetailMissionDto;
 import com.frogkim93.stationsystemapi.mission.dto.MissionDto;
 import com.frogkim93.stationsystemapi.mission.service.MissionService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,17 +17,19 @@ import java.util.List;
 @RestController
 @RequestMapping("mission")
 @RequiredArgsConstructor
+@Slf4j
 public class MissionController {
     private final MissionService missionService;
 
     @GetMapping
-    private ResponseEntity<List<MissionDto>> getMissions(HttpSession httpSession) {
-        Object foundMemberSeq = httpSession.getAttribute("memberSeq");
-        if (foundMemberSeq == null) {
+    private ResponseEntity<List<MissionDto>> getMissions(HttpServletRequest httpServletRequest) {
+        HttpSession httpSession = httpServletRequest.getSession(false);
+
+        if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        return missionService.getMissions((int) foundMemberSeq);
+        return missionService.getMissions((int) httpSession.getAttribute("memberSeq"));
     }
 
     @PostMapping

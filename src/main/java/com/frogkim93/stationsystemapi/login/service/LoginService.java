@@ -6,6 +6,7 @@ import com.frogkim93.stationsystemapi.model.Member;
 import com.frogkim93.stationsystemapi.repository.MemberRepository;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class LoginService {
     private final MemberRepository memberRepository;
 
@@ -29,11 +31,12 @@ public class LoginService {
 
         if (encryptedPassword.equals(member.getPassword())) {
             httpSession.setAttribute("memberSeq", member.getSeq());
+            httpSession.setMaxInactiveInterval(3600);
 
             return ResponseEntity.ok(MemberDto.builder()
-                    .id(member.getMemberID())
-                    .name(member.getName())
-                    .build());
+                .id(member.getMemberID())
+                .name(member.getName())
+                .build());
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

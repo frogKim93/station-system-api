@@ -30,16 +30,14 @@ public class ScheduleController {
     }
 
     @PostMapping
-//    private ResponseEntity<Void> createSchedule(HttpServletRequest httpServletRequest, @RequestBody CreateScheduleDto createScheduleDto) {
-    private ResponseEntity<Void> createSchedule(@RequestBody CreateScheduleDto createScheduleDto) {
-//        HttpSession httpSession = httpServletRequest.getSession(false);
+    private ResponseEntity<Void> createSchedule(HttpServletRequest httpServletRequest, @RequestBody CreateScheduleDto createScheduleDto) {
+        HttpSession httpSession = httpServletRequest.getSession(false);
 
-//        if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-//        }
+        if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-//        return scheduleService.createSchedule((int) httpSession.getAttribute("memberSeq"), createScheduleDto);
-        return scheduleService.createSchedule(5, createScheduleDto);
+        return scheduleService.createSchedule((int) httpSession.getAttribute("memberSeq"), createScheduleDto);
     }
 
     @PutMapping("/{scheduleSeq}")

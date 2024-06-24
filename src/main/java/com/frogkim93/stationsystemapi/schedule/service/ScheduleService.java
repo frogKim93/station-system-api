@@ -28,6 +28,7 @@ public class ScheduleService {
     private final StationRepository stationRepository;
     private final DroneRepository droneRepository;
     private final MissionRepository missionRepository;
+    private final SimulationService simulationService;
 
     public ResponseEntity<List<ScheduleDto>> getSchedules(int memberSeq) {
         List<Schedule> foundSchedules = scheduleRepository.findByMemberSeq(memberSeq);
@@ -79,7 +80,10 @@ public class ScheduleService {
                 .completedAt(null)
                 .build();
 
+        Drone foundDrone = droneRepository.findByStationSeq(foundStation.get().getSeq());
+
         scheduleRepository.saveAndFlush(schedule);
+        simulationService.simulate(foundStation.get(), foundDrone, foundMission.get());
 
         return ResponseEntity.ok().build();
     }

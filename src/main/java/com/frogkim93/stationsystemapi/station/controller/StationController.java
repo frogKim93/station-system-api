@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,5 +29,16 @@ public class StationController {
         }
 
         return stationService.getStations((int) httpSession.getAttribute("memberSeq"));
+    }
+
+    @PostMapping
+    private ResponseEntity<Void> createStation(HttpServletRequest httpServletRequest, StationDto stationDto) {
+        HttpSession httpSession = httpServletRequest.getSession(false);
+
+        if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return stationService.create((int) httpSession.getAttribute("memberSeq"), stationDto);
     }
 }

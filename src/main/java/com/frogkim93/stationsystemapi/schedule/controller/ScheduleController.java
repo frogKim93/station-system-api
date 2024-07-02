@@ -1,9 +1,11 @@
 package com.frogkim93.stationsystemapi.schedule.controller;
 
+import com.frogkim93.stationsystemapi.login.service.LoginService;
 import com.frogkim93.stationsystemapi.schedule.dto.CreateScheduleDto;
 import com.frogkim93.stationsystemapi.schedule.dto.ScheduleDto;
 import com.frogkim93.stationsystemapi.schedule.service.ScheduleService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,13 +19,24 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ScheduleController {
     private final ScheduleService scheduleService;
+    private final LoginService loginService;
 
     @GetMapping
-    private ResponseEntity<List<ScheduleDto>> getSchedules(HttpServletRequest httpServletRequest) {
+    private ResponseEntity<List<ScheduleDto>> getSchedules(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         HttpSession httpSession = httpServletRequest.getSession(false);
 
         if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpServletRequest);
+
+            if (foundMemberSeq > 0) {
+                httpSession = httpServletRequest.getSession(true);
+                httpSession.setAttribute("memberSeq", foundMemberSeq);
+                httpSession.setMaxInactiveInterval(3600);
+
+                loginService.updateCookie(foundMemberSeq, httpServletResponse);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
         }
 
         return scheduleService.getSchedules((int) httpSession.getAttribute("memberSeq"));

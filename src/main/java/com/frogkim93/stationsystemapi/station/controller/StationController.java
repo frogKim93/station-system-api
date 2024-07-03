@@ -1,6 +1,7 @@
 package com.frogkim93.stationsystemapi.station.controller;
 
 import com.frogkim93.stationsystemapi.login.service.LoginService;
+import com.frogkim93.stationsystemapi.station.dto.RunningStationDto;
 import com.frogkim93.stationsystemapi.station.dto.StationDto;
 import com.frogkim93.stationsystemapi.station.service.StationService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,5 +51,26 @@ public class StationController {
         }
 
         return stationService.create((int) httpSession.getAttribute("memberSeq"), stationDto);
+    }
+
+    @GetMapping(value = "/running")
+    private ResponseEntity<List<RunningStationDto>> getRunningStations(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        HttpSession httpSession = httpServletRequest.getSession(false);
+
+        if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpServletRequest);
+
+            if (foundMemberSeq > 0) {
+                httpSession = httpServletRequest.getSession(true);
+                httpSession.setAttribute("memberSeq", foundMemberSeq);
+                httpSession.setMaxInactiveInterval(3600);
+
+                loginService.updateCookie(foundMemberSeq, httpServletResponse);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        }
+
+        return stationService.getRunningStations((int) httpSession.getAttribute("memberSeq"));
     }
 }

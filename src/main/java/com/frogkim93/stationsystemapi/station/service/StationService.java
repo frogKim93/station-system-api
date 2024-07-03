@@ -1,11 +1,16 @@
 package com.frogkim93.stationsystemapi.station.service;
 
 import com.frogkim93.stationsystemapi.model.Drone;
+import com.frogkim93.stationsystemapi.model.Mission;
+import com.frogkim93.stationsystemapi.model.Schedule;
 import com.frogkim93.stationsystemapi.model.Station;
 import com.frogkim93.stationsystemapi.repository.DroneRepository;
+import com.frogkim93.stationsystemapi.repository.MissionRepository;
+import com.frogkim93.stationsystemapi.repository.ScheduleRepository;
 import com.frogkim93.stationsystemapi.repository.StationRepository;
+import com.frogkim93.stationsystemapi.schedule.constants.ScheduleStatus;
 import com.frogkim93.stationsystemapi.station.constants.RunningState;
-import com.frogkim93.stationsystemapi.station.dto.DroneDto;
+import com.frogkim93.stationsystemapi.station.dto.RunningStationDto;
 import com.frogkim93.stationsystemapi.station.dto.StationDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +25,8 @@ import java.util.List;
 public class StationService {
     private final StationRepository stationRepository;
     private final DroneRepository droneRepository;
+    private final ScheduleRepository scheduleRepository;
+    private final MissionRepository missionRepository;
 
     public ResponseEntity<List<StationDto>> getStations(int memberSeq) {
         List<Station> foundStations = stationRepository.findByMemberSeq(memberSeq);
@@ -58,5 +65,31 @@ public class StationService {
         droneRepository.saveAndFlush(drone);
 
         return ResponseEntity.ok().build();
+    }
+
+    public ResponseEntity<List<RunningStationDto>> getRunningStations(int memberSeq) {
+        List<Station> foundStations = stationRepository.findByMemberSeq(memberSeq);
+        List<RunningStationDto> stations = new ArrayList<>();
+
+        for (Station station : foundStations) {
+            if (station.getStatus() == RunningState.RUNNING) {
+                Drone drone = droneRepository.findByStationSeq(station.getSeq());
+                Schedule currentSchedule = scheduleRepository.findByStationSeqAndStatus(station.getSeq(), ScheduleStatus.STARTED);
+
+                if (currentSchedule != null) {
+                    Mission currentMission = missionRepository.findById(currentSchedule.getMissionSeq()).get();
+
+                    RunningStationDto runningStation = RunningStationDto.rsBuilder()
+                            .stationEntity(station)
+                            .droneEntity(drone)
+                            .mission(currentMission)
+                            .rsBuild();
+
+                    stations.add(runningStation);
+                }
+            }
+        }
+
+        return ResponseEntity.ok(stations);
     }
 }

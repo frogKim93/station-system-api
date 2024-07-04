@@ -4,73 +4,82 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.frogkim93.stationsystemapi.mission.dto.PointDto;
 import com.frogkim93.stationsystemapi.model.Drone;
 import com.frogkim93.stationsystemapi.model.Mission;
+import com.frogkim93.stationsystemapi.model.Schedule;
 import com.frogkim93.stationsystemapi.model.Station;
 import com.frogkim93.stationsystemapi.repository.DroneRepository;
+import com.frogkim93.stationsystemapi.repository.MissionRepository;
+import com.frogkim93.stationsystemapi.repository.ScheduleRepository;
 import com.frogkim93.stationsystemapi.repository.StationRepository;
+import com.frogkim93.stationsystemapi.schedule.constants.ScheduleStatus;
 import com.frogkim93.stationsystemapi.station.constants.RunningState;
 import com.frogkim93.stationsystemapi.utils.JsonConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
 public class SimulationService {
+    private final ScheduleRepository scheduleRepository;
     private final StationRepository stationRepository;
     private final DroneRepository droneRepository;
+    private final MissionRepository missionRepository;
 
     @Async
-    public void simulate(Station station, Drone drone, Mission mission) {
+    public void simulate(Schedule schedule) {
+        Mission mission = missionRepository.findById(schedule.getMissionSeq()).get();
+        Station station = stationRepository.findById(schedule.getStationSeq()).get();
+        Drone drone = droneRepository.findByStationSeq(station.getSeq());
+
         ArrayList<PointDto> ways = JsonConverter.convertStringToObject(mission.getWays(), new TypeReference<>() {
         });
 
         station.setStatus(RunningState.RUNNING);
         station = stationRepository.saveAndFlush(station);
 
-        double speed = 12;
+        double speed = 10;
 
-        try {
-            PointDto startPoint = ways.get(0);
-            int currentIndex = 1;
-            boolean isReturnToHome = false;
+        PointDto homePoint = new PointDto(station.getLatitude(), station.getLongitude(), 0);
+        ways.addFirst(homePoint);
+        ways.addLast(homePoint);
 
-            while (true) {
-                int nextIndex = currentIndex + 1;
+        int pointIndex = 0;
 
-                if (isReturnToHome) {
-                    break;
-                }
+        while (pointIndex + 1 < ways.size()) {
+            PointDto startPoint = ways.get(pointIndex);
+            PointDto nextPoint = ways.get(pointIndex + 1);
+            double distance = getDistance(startPoint, nextPoint);
+            int needTime = (int) Math.ceil(distance / speed);
 
-                if (ways.size() == nextIndex) {
-                    isReturnToHome = true;
-                    startPoint = ways.getLast();
-                }
+            for (int i = 0; i < needTime; i++) {
+                double progress = (double) (i + 1) / needTime;
+                double newLatitude = startPoint.getLatitude() + (nextPoint.getLatitude() - startPoint.getLatitude()) * progress;
+                double newLongitude = startPoint.getLongitude() + (nextPoint.getLongitude() - startPoint.getLongitude()) * progress;
 
-                PointDto nextPoint = isReturnToHome ? new PointDto(station.getLatitude(), station.getLongitude(), 0) : ways.get(nextIndex);
-                double distance = getDistance(startPoint, nextPoint);
-                int needTime = (int) Math.ceil(distance / speed);
+                drone.setLatitude(newLatitude);
+                drone.setLongitude(newLongitude);
 
-                for (int i = 0; i < needTime; i++) {
-                    double progress = (double) (i + 1) / needTime;
-                    double newLatitude = startPoint.getLatitude() + (nextPoint.getLatitude() - startPoint.getLatitude()) * progress;
-                    double newLongitude = startPoint.getLongitude() + (nextPoint.getLongitude() - startPoint.getLongitude()) * progress;
+                droneRepository.saveAndFlush(drone);
 
-                    drone.setLatitude(newLatitude);
-                    drone.setLongitude(newLongitude);
-
-                    droneRepository.saveAndFlush(drone);
-
+                try {
                     Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            station.setStatus(RunningState.IDLE);
-            stationRepository.saveAndFlush(station);
+
+            pointIndex++;
         }
+
+        station.setStatus(RunningState.IDLE);
+        stationRepository.saveAndFlush(station);
+
+        schedule.setStatus(ScheduleStatus.COMPLETED);
+        schedule.setCompletedAt(LocalDateTime.now());
+        scheduleRepository.saveAndFlush(schedule);
     }
 
     private double getDistance(PointDto pointA, PointDto pointB) {

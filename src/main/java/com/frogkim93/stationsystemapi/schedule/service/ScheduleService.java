@@ -80,10 +80,8 @@ public class ScheduleService {
                 .completedAt(null)
                 .build();
 
-        Drone foundDrone = droneRepository.findByStationSeq(foundStation.get().getSeq());
-
         scheduleRepository.saveAndFlush(schedule);
-        simulationService.simulate(foundStation.get(), foundDrone, foundMission.get());
+        simulationService.simulate(schedule);
 
         return ResponseEntity.ok().build();
     }

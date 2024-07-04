@@ -53,7 +53,7 @@ public class StationController {
         return stationService.create((int) httpSession.getAttribute("memberSeq"), stationDto);
     }
 
-    @GetMapping(value = "/running")
+    @GetMapping(value = "running")
     private ResponseEntity<List<RunningStationDto>> getRunningStations(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         HttpSession httpSession = httpServletRequest.getSession(false);
 
@@ -72,5 +72,11 @@ public class StationController {
         }
 
         return stationService.getRunningStations((int) httpSession.getAttribute("memberSeq"));
+    }
+
+    @GetMapping(value = "test")
+    private ResponseEntity<List<RunningStationDto>> getRunningStationsTest() {
+        System.out.println("test");
+        return stationService.getRunningStations(5);
     }
 }

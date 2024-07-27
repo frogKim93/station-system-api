@@ -26,7 +26,7 @@ public class ScheduleController {
         HttpSession httpSession = httpServletRequest.getSession(false);
 
         if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
-            int foundMemberSeq = loginService.getUserSeqInCookie(httpServletRequest);
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpSession, httpServletRequest);
 
             if (foundMemberSeq > 0) {
                 httpSession = httpServletRequest.getSession(true);
@@ -34,44 +34,70 @@ public class ScheduleController {
                 httpSession.setMaxInactiveInterval(3600);
 
                 loginService.updateCookie(foundMemberSeq, httpServletResponse);
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                return scheduleService.getSchedules(foundMemberSeq);
             }
         }
 
-        return scheduleService.getSchedules((int) httpSession.getAttribute("memberSeq"));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @PostMapping
-    private ResponseEntity<Void> createSchedule(HttpServletRequest httpServletRequest, @RequestBody CreateScheduleDto createScheduleDto) {
+    private ResponseEntity<Void> createSchedule(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @RequestBody CreateScheduleDto createScheduleDto) {
         HttpSession httpSession = httpServletRequest.getSession(false);
 
         if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpSession, httpServletRequest);
+
+            if (foundMemberSeq > 0) {
+                httpSession = httpServletRequest.getSession(true);
+                httpSession.setAttribute("memberSeq", foundMemberSeq);
+                httpSession.setMaxInactiveInterval(3600);
+
+                loginService.updateCookie(foundMemberSeq, httpServletResponse);
+                return scheduleService.createSchedule(foundMemberSeq, createScheduleDto);
+            }
         }
 
-        return scheduleService.createSchedule((int) httpSession.getAttribute("memberSeq"), createScheduleDto);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @PutMapping("/{scheduleSeq}")
-    private ResponseEntity<Void> updateSchedule(HttpServletRequest httpServletRequest, @PathVariable int scheduleSeq, @RequestBody CreateScheduleDto createScheduleDto) {
+    private ResponseEntity<Void> updateSchedule(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable int scheduleSeq, @RequestBody CreateScheduleDto createScheduleDto) {
         HttpSession httpSession = httpServletRequest.getSession(false);
 
         if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpSession, httpServletRequest);
+
+            if (foundMemberSeq > 0) {
+                httpSession = httpServletRequest.getSession(true);
+                httpSession.setAttribute("memberSeq", foundMemberSeq);
+                httpSession.setMaxInactiveInterval(3600);
+
+                loginService.updateCookie(foundMemberSeq, httpServletResponse);
+                return scheduleService.updateSchedule(scheduleSeq, createScheduleDto);
+            }
         }
 
-        return scheduleService.updateSchedule(scheduleSeq, createScheduleDto);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @DeleteMapping("/{scheduleSeq}")
-    private ResponseEntity<Void> deleteSchdule(HttpServletRequest httpServletRequest, @PathVariable int scheduleSeq) {
+    private ResponseEntity<Void> deleteSchedule(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable int scheduleSeq) {
         HttpSession httpSession = httpServletRequest.getSession(false);
 
         if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpSession, httpServletRequest);
+
+            if (foundMemberSeq > 0) {
+                httpSession = httpServletRequest.getSession(true);
+                httpSession.setAttribute("memberSeq", foundMemberSeq);
+                httpSession.setMaxInactiveInterval(3600);
+
+                loginService.updateCookie(foundMemberSeq, httpServletResponse);
+                return scheduleService.deleteSchedule(scheduleSeq);
+            }
         }
 
-        return scheduleService.deleteSchedule(scheduleSeq);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 }

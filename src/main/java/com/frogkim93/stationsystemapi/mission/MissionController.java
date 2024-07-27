@@ -29,7 +29,7 @@ public class MissionController {
         HttpSession httpSession = httpServletRequest.getSession(false);
 
         if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
-            int foundMemberSeq = loginService.getUserSeqInCookie(httpServletRequest);
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpSession, httpServletRequest);
 
             if (foundMemberSeq > 0) {
                 httpSession = httpServletRequest.getSession(true);
@@ -46,42 +46,82 @@ public class MissionController {
     }
 
     @PostMapping
-    private ResponseEntity<Void> createMission(HttpSession httpSession, @RequestBody CreateMissionDto createMissionDto) {
-        Object foundMemberSeq = httpSession.getAttribute("memberSeq");
-        if (foundMemberSeq == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    private ResponseEntity<Void> createMission(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @RequestBody CreateMissionDto createMissionDto) {
+        HttpSession httpSession = httpServletRequest.getSession(false);
+
+        if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpSession, httpServletRequest);
+
+            if (foundMemberSeq > 0) {
+                httpSession = httpServletRequest.getSession(true);
+                httpSession.setAttribute("memberSeq", foundMemberSeq);
+                httpSession.setMaxInactiveInterval(3600);
+
+                loginService.updateCookie(foundMemberSeq, httpServletResponse);
+                return missionService.create(foundMemberSeq, createMissionDto);
+            }
         }
 
-        return missionService.create((int) foundMemberSeq, createMissionDto);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @GetMapping(value = "/{missionSeq}")
-    private ResponseEntity<DetailMissionDto> getMission(HttpSession httpSession, @PathVariable int missionSeq) {
-        Object foundMemberSeq = httpSession.getAttribute("memberSeq");
-        if (foundMemberSeq == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    private ResponseEntity<DetailMissionDto> getMission(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable int missionSeq) {
+        HttpSession httpSession = httpServletRequest.getSession(false);
+
+        if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpSession, httpServletRequest);
+
+            if (foundMemberSeq > 0) {
+                httpSession = httpServletRequest.getSession(true);
+                httpSession.setAttribute("memberSeq", foundMemberSeq);
+                httpSession.setMaxInactiveInterval(3600);
+
+                loginService.updateCookie(foundMemberSeq, httpServletResponse);
+                return missionService.getMission(missionSeq);
+            }
         }
 
-        return missionService.getMission(missionSeq);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @PutMapping(value = "/{missionSeq}")
-    private ResponseEntity<Void> updateMission(HttpSession httpSession, @PathVariable int missionSeq, @RequestBody CreateMissionDto createMissionDto) {
-        Object foundMemberSeq = httpSession.getAttribute("memberSeq");
-        if (foundMemberSeq == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    private ResponseEntity<Void> updateMission(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable int missionSeq, @RequestBody CreateMissionDto createMissionDto) {
+        HttpSession httpSession = httpServletRequest.getSession(false);
+
+        if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpSession, httpServletRequest);
+
+            if (foundMemberSeq > 0) {
+                httpSession = httpServletRequest.getSession(true);
+                httpSession.setAttribute("memberSeq", foundMemberSeq);
+                httpSession.setMaxInactiveInterval(3600);
+
+                loginService.updateCookie(foundMemberSeq, httpServletResponse);
+                return missionService.update(missionSeq, createMissionDto);
+            }
         }
 
-        return missionService.update(missionSeq, createMissionDto);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @DeleteMapping(value = "/{missionSeq}")
-    private ResponseEntity<Void> deleteMission(HttpSession httpSession, @PathVariable int missionSeq) {
-        Object foundMemberSeq = httpSession.getAttribute("memberSeq");
-        if (foundMemberSeq == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    private ResponseEntity<Void> deleteMission(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable int missionSeq) {
+        HttpSession httpSession = httpServletRequest.getSession(false);
+
+        if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpSession, httpServletRequest);
+
+            if (foundMemberSeq > 0) {
+                httpSession = httpServletRequest.getSession(true);
+                httpSession.setAttribute("memberSeq", foundMemberSeq);
+                httpSession.setMaxInactiveInterval(3600);
+
+                loginService.updateCookie(foundMemberSeq, httpServletResponse);
+                return missionService.delete(missionSeq);
+            }
         }
 
-        return missionService.delete(missionSeq);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 }

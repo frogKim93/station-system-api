@@ -26,7 +26,7 @@ public class StationController {
         HttpSession httpSession = httpServletRequest.getSession(false);
 
         if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
-            int foundMemberSeq = loginService.getUserSeqInCookie(httpServletRequest);
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpSession, httpServletRequest);
 
             if (foundMemberSeq > 0) {
                 httpSession = httpServletRequest.getSession(true);
@@ -34,23 +34,31 @@ public class StationController {
                 httpSession.setMaxInactiveInterval(3600);
 
                 loginService.updateCookie(foundMemberSeq, httpServletResponse);
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                return stationService.getStations(foundMemberSeq);
             }
         }
 
-        return stationService.getStations((int) httpSession.getAttribute("memberSeq"));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @PostMapping
-    private ResponseEntity<Void> createStation(HttpServletRequest httpServletRequest, @RequestBody StationDto stationDto) {
+    private ResponseEntity<Void> createStation(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @RequestBody StationDto stationDto) {
         HttpSession httpSession = httpServletRequest.getSession(false);
 
         if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpSession, httpServletRequest);
+
+            if (foundMemberSeq > 0) {
+                httpSession = httpServletRequest.getSession(true);
+                httpSession.setAttribute("memberSeq", foundMemberSeq);
+                httpSession.setMaxInactiveInterval(3600);
+
+                loginService.updateCookie(foundMemberSeq, httpServletResponse);
+                return stationService.create(foundMemberSeq, stationDto);
+            }
         }
 
-        return stationService.create((int) httpSession.getAttribute("memberSeq"), stationDto);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @GetMapping(value = "running")
@@ -58,7 +66,7 @@ public class StationController {
         HttpSession httpSession = httpServletRequest.getSession(false);
 
         if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
-            int foundMemberSeq = loginService.getUserSeqInCookie(httpServletRequest);
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpSession, httpServletRequest);
 
             if (foundMemberSeq > 0) {
                 httpSession = httpServletRequest.getSession(true);
@@ -66,17 +74,10 @@ public class StationController {
                 httpSession.setMaxInactiveInterval(3600);
 
                 loginService.updateCookie(foundMemberSeq, httpServletResponse);
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                return stationService.getRunningStations(foundMemberSeq);
             }
         }
 
-        return stationService.getRunningStations((int) httpSession.getAttribute("memberSeq"));
-    }
-
-    @GetMapping(value = "test")
-    private ResponseEntity<List<RunningStationDto>> getRunningStationsTest() {
-        System.out.println("test");
-        return stationService.getRunningStations(5);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 }

@@ -49,9 +49,20 @@ public class LoginService {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    public int getUserSeqInCookie(HttpServletRequest request) {
-        Cookie foundCookie = null;
+    public int getUserSeqInCookie(HttpSession httpSession, HttpServletRequest request) {
+        if (httpSession != null) {
+            Object memberSeq = httpSession.getAttribute("memberSeq");
 
+            if (memberSeq != null) {
+                return (int) memberSeq;
+            }
+        }
+
+        if (request.getCookies() == null) {
+            return 0;
+        }
+
+        Cookie foundCookie = null;
         for (Cookie cookie : request.getCookies()) {
             if (cookie.getName().equals("station-simulate-auth")) {
                 foundCookie = cookie;
@@ -67,9 +78,14 @@ public class LoginService {
     }
 
     public void updateCookie(int memberSeq, HttpServletResponse servletResponse) {
-        Cookie cookie = new Cookie("station-simulate-auth", AESUtils.encrypt(memberSeq));
-        cookie.setMaxAge(60 * 60 * 8);
-        cookie.setPath("/");
-        servletResponse.addCookie(cookie);
+        ResponseCookie cookie = ResponseCookie.from("station-simulate-auth", AESUtils.encrypt(memberSeq))
+                .path("/")
+                .httpOnly(true)
+                .secure(true)
+                .maxAge(60 * 60 * 8)
+                .sameSite("None")
+                .build();
+
+        servletResponse.setHeader("Set-Cookie", cookie.toString());
     }
 }

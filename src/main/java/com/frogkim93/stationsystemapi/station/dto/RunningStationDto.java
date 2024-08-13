@@ -4,14 +4,12 @@ import com.frogkim93.stationsystemapi.mission.dto.DetailMissionDto;
 import com.frogkim93.stationsystemapi.model.Drone;
 import com.frogkim93.stationsystemapi.model.Mission;
 import com.frogkim93.stationsystemapi.model.Station;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
+@Getter
+@Setter
 public class RunningStationDto extends StationDto {
     private DetailMissionDto currentMission;
 

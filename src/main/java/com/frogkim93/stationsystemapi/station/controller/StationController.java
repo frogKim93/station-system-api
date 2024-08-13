@@ -61,6 +61,46 @@ public class StationController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
+    @PutMapping(value = "{stationSeq}")
+    private ResponseEntity<Void> updateStation(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable int stationSeq, @RequestBody StationDto stationDto) {
+        HttpSession httpSession = httpServletRequest.getSession(false);
+
+        if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpSession, httpServletRequest);
+
+            if (foundMemberSeq > 0) {
+                httpSession = httpServletRequest.getSession(true);
+                httpSession.setAttribute("memberSeq", foundMemberSeq);
+                httpSession.setMaxInactiveInterval(3600);
+
+                loginService.updateCookie(foundMemberSeq, httpServletResponse);
+                return stationService.update(stationSeq, stationDto);
+            }
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @DeleteMapping(value = "{stationSeq}")
+    private ResponseEntity<Void> deleteStation(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @PathVariable int stationSeq) {
+        HttpSession httpSession = httpServletRequest.getSession(false);
+
+        if (httpSession == null || httpSession.getAttribute("memberSeq") == null) {
+            int foundMemberSeq = loginService.getUserSeqInCookie(httpSession, httpServletRequest);
+
+            if (foundMemberSeq > 0) {
+                httpSession = httpServletRequest.getSession(true);
+                httpSession.setAttribute("memberSeq", foundMemberSeq);
+                httpSession.setMaxInactiveInterval(3600);
+
+                loginService.updateCookie(foundMemberSeq, httpServletResponse);
+                return stationService.delete(stationSeq);
+            }
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
     @GetMapping(value = "running")
     private ResponseEntity<List<RunningStationDto>> getRunningStations(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         HttpSession httpSession = httpServletRequest.getSession(false);

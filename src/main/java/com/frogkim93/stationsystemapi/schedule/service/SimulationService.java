@@ -41,26 +41,42 @@ public class SimulationService {
         station = stationRepository.saveAndFlush(station);
 
         double speed = 10;
-
+        double targetHeight = ways.get(0).getHeight();
         PointDto homePoint = new PointDto(station.getLatitude(), station.getLongitude(), 0);
+
+        for (double i = targetHeight; i > 0; i -= 5) {
+            PointDto takeOffPoint = new PointDto(station.getLatitude(), station.getLongitude(), i);
+            ways.addFirst(takeOffPoint);
+        }
+
         ways.addFirst(homePoint);
+
+        for (double i = targetHeight; i > 0; i -= 5) {
+            PointDto takeOffPoint = new PointDto(station.getLatitude(), station.getLongitude(), i);
+            ways.addLast(takeOffPoint);
+        }
+
         ways.addLast(homePoint);
 
         int pointIndex = 0;
-
         while (pointIndex + 1 < ways.size()) {
             PointDto startPoint = ways.get(pointIndex);
             PointDto nextPoint = ways.get(pointIndex + 1);
             double distance = getDistance(startPoint, nextPoint);
+            if (distance == 0) {
+                distance = speed;
+            }
             int needTime = (int) Math.ceil(distance / speed);
 
             for (int i = 0; i < needTime; i++) {
                 double progress = (double) (i + 1) / needTime;
                 double newLatitude = startPoint.getLatitude() + (nextPoint.getLatitude() - startPoint.getLatitude()) * progress;
                 double newLongitude = startPoint.getLongitude() + (nextPoint.getLongitude() - startPoint.getLongitude()) * progress;
+                double newHeight = startPoint.getHeight() + (nextPoint.getHeight() - startPoint.getHeight()) * progress;
 
                 drone.setLatitude(newLatitude);
                 drone.setLongitude(newLongitude);
+                drone.setHeight(newHeight);
 
                 droneRepository.saveAndFlush(drone);
 

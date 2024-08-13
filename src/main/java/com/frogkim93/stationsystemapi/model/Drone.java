@@ -30,4 +30,7 @@ public class Drone {
 
     @Column
     private double longitude;
+
+    @Column
+    private double height;
 }

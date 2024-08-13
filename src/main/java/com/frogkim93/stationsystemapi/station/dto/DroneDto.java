@@ -14,6 +14,7 @@ public class DroneDto {
     private String name;
     private double latitude;
     private double longitude;
+    private double height;
 
     @Builder
     private DroneDto(Drone droneEntity) {
@@ -21,5 +22,6 @@ public class DroneDto {
         name = droneEntity.getName();
         latitude = droneEntity.getLatitude();
         longitude = droneEntity.getLongitude();
+        height = droneEntity.getHeight();
     }
 }

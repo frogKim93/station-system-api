@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -64,6 +65,41 @@ public class StationService {
 
         droneRepository.saveAndFlush(drone);
 
+        return ResponseEntity.ok().build();
+    }
+
+    public ResponseEntity<Void> update(int stationSeq, StationDto stationDto) {
+        Optional<Station> foundStation = stationRepository.findById(stationSeq);
+        Drone drone = droneRepository.findByStationSeq(stationSeq);
+
+        if (foundStation.isEmpty() || drone == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Station station = foundStation.get();
+        station.setName(stationDto.getName());
+        station.setLongitude(stationDto.getLongitude());
+        station.setLatitude(stationDto.getLatitude());
+
+        stationRepository.saveAndFlush(station);
+
+        drone.setLatitude(stationDto.getDrone().getLatitude());
+        drone.setLongitude(stationDto.getDrone().getLongitude());
+        drone.setName(stationDto.getDrone().getName());
+
+        droneRepository.saveAndFlush(drone);
+
+        return ResponseEntity.ok().build();
+    }
+
+    public ResponseEntity<Void> delete(int stationSeq) {
+        Optional<Station> foundStation = stationRepository.findById(stationSeq);
+
+        if (foundStation.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        stationRepository.deleteById(stationSeq);
         return ResponseEntity.ok().build();
     }
 
